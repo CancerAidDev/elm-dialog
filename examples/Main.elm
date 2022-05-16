@@ -24,12 +24,14 @@ main =
 
 
 type alias Model =
-    Dialog.Model String
+    { dialog : Dialog.Model String Msg
+    , letterBox : String
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Nothing, Cmd.none )
+    ( { dialog = Nothing, letterBox = "📭" }, Cmd.none )
 
 
 
@@ -41,48 +43,82 @@ type Msg
     | OpenInfoDialog
     | OpenErrorDialog
     | OpenHttpErrorDialog
+    | OpenOkCancelDialog
     | OpenLoadingDialog
+    | Ok
+    | Cancel
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         DialogMsg subMsg ->
-            Dialog.update subMsg model
-                |> Tuple.mapSecond (Cmd.map DialogMsg)
+            Dialog.update subMsg model.dialog
+                |> (\( updatedDialog, cmd ) -> ( { model | dialog = updatedDialog }, Cmd.map DialogMsg cmd ))
 
         OpenInfoDialog ->
-            ( Just <|
-                Dialog.info
-                    { title = "Info"
-                    , message = "Hello from elm-dialog"
-                    }
+            ( { model
+                | dialog =
+                    Just <|
+                        Dialog.info
+                            { title = "Info"
+                            , message = "Hello from elm-dialog"
+                            }
+              }
             , Cmd.none
             )
 
         OpenErrorDialog ->
-            ( Just <|
-                Dialog.error
-                    { title = "Error"
-                    , message = "Something went wrong :("
-                    }
+            ( { model
+                | dialog =
+                    Just <|
+                        Dialog.error
+                            { title = "Error"
+                            , message = "Something went wrong :("
+                            }
+              }
             , Cmd.none
             )
 
         OpenHttpErrorDialog ->
-            ( Just <|
-                Dialog.httpError
-                    { title = "Error"
-                    , message = "Something went wrong :("
-                    }
-                    HttpDetailed.Timeout
+            ( { model
+                | dialog =
+                    Just <|
+                        Dialog.httpError
+                            { title = "Error"
+                            , message = "Something went wrong :("
+                            }
+                            HttpDetailed.Timeout
+              }
+            , Cmd.none
+            )
+
+        OpenOkCancelDialog ->
+            ( { model
+                | dialog =
+                    Just <|
+                        Dialog.okCancel
+                            { title = "Hello"
+                            , message = "Click ok to get a letter."
+                            , ok = Ok
+                            , cancel = Cancel
+                            }
+              }
             , Cmd.none
             )
 
         OpenLoadingDialog ->
-            ( Just <| Dialog.loading
+            ( { model
+                | dialog = Just <| Dialog.loading
+              }
             , Cmd.none
             )
+
+        Ok ->
+            ( { model | letterBox = "📬", dialog = Nothing }, Cmd.none )
+
+        Cancel ->
+            ( { model | letterBox = "📭", dialog = Nothing }, Cmd.none )
 
 
 
@@ -97,5 +133,7 @@ view model =
         , button [ class "button ml-3", onClick OpenErrorDialog ] [ text "Open Error Dialog" ]
         , button [ class "button ml-3", onClick OpenHttpErrorDialog ] [ text "Open Http Error Dialog" ]
         , button [ class "button ml-3", onClick OpenLoadingDialog ] [ text "Open Loading Dialog" ]
-        , Html.map DialogMsg <| DialogBulma.view DialogBulma.defaultCustomizations model
+        , button [ class "button ml-3", onClick OpenOkCancelDialog ] [ text "Open Ok Cancel Dialog" ]
+        , Html.div [ class "mt-4" ] [ Html.text model.letterBox ]
+        , DialogBulma.view (DialogBulma.defaultCustomizations DialogMsg) model.dialog
         ]

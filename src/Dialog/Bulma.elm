@@ -94,6 +94,7 @@ import Dialog
 import Dialog.Internal as Internal
 import Html
 import Html.Attributes as HtmlAttributes
+import Html.Attributes.Extra as HtmlAttributesExtra
 import Html.Events as HtmlEvents
 import Html.Extra as HtmlExtra
 import Http.Detailed as HttpDetailed
@@ -101,10 +102,11 @@ import Http.Detailed as HttpDetailed
 
 {-| Default `Dialog` customizations for Bulma.
 -}
-defaultCustomizations : Dialog.Customizations String
-defaultCustomizations =
+defaultCustomizations : (Dialog.Msg -> msg) -> Dialog.Customizations String msg
+defaultCustomizations toMsg =
     { viewLoadingIndicator = defaultLoadingIndicator
     , viewHttpError = defaultViewHttpError
+    , toMsg = toMsg
     }
 
 
@@ -114,109 +116,160 @@ defaultCustomizations =
 [message]: https://bulma.io/documentation/components/message/
 
 -}
-view : Dialog.Customizations body -> Dialog.Model body -> Html.Html Dialog.Msg
+view : Dialog.Customizations body msg -> Dialog.Model body msg -> Html.Html msg
 view config maybeDialog =
     case maybeDialog of
         Just Internal.Loading ->
             viewLoadingDialog config
 
         Just (Internal.DialogInfo info) ->
-            viewInfoDialog info
+            viewInfoDialog config info
 
         Just (Internal.DialogError error) ->
-            viewErrorDialog error
+            viewErrorDialog config error
 
         Just (Internal.DialogHttpError error) ->
             viewHttpErrorDialog config error
+
+        Just (Internal.DialogOkCancel okCancel) ->
+            viewOkCancelDialog config okCancel
 
         Nothing ->
             HtmlExtra.nothing
 
 
-viewModal : List (Html.Html Dialog.Msg) -> Html.Html Dialog.Msg
-viewModal children =
+viewModal : Dialog.Customizations body msg -> { closeOnBackgroundClick : Bool } -> List (Html.Html msg) -> Html.Html msg
+viewModal { toMsg } { closeOnBackgroundClick } children =
     Html.div [ HtmlAttributes.class "modal is-active is-clipped" ]
-        [ Html.div [ HtmlAttributes.class "modal-background", HtmlEvents.onClick Internal.Close ] []
+        [ Html.div
+            [ HtmlAttributes.class "modal-background"
+            , HtmlAttributesExtra.attributeIf closeOnBackgroundClick <| HtmlEvents.onClick (toMsg Internal.Close)
+            ]
+            []
         , Html.div [ HtmlAttributes.class "modal-content has-text-left" ]
             children
         ]
 
 
-viewLoadingDialog : Dialog.Customizations body -> Html.Html Dialog.Msg
-viewLoadingDialog { viewLoadingIndicator } =
-    viewModal
+viewLoadingDialog : Dialog.Customizations body msg -> Html.Html msg
+viewLoadingDialog ({ viewLoadingIndicator } as config) =
+    viewModal config
+        { closeOnBackgroundClick = False }
         [ Html.div
             [ HtmlAttributes.class "is-flex is-justify-content-center" ]
             [ viewLoadingIndicator ]
         ]
 
 
-viewHeader : String -> Html.Html Dialog.Msg
-viewHeader title =
+viewHeader : Dialog.Customizations body msg -> { title : String, showCloseButton : Bool } -> Html.Html msg
+viewHeader { toMsg } { title, showCloseButton } =
     Html.div [ HtmlAttributes.class "message-header" ]
         [ Html.p [] [ Html.text title ]
-        , Html.button
-            [ HtmlAttributes.class "delete"
-            , Aria.label "close"
-            , HtmlEvents.onClick Internal.Close
-            ]
-            []
+        , HtmlExtra.viewIf showCloseButton <|
+            Html.button
+                [ HtmlAttributes.class "delete"
+                , Aria.label "close"
+                , HtmlEvents.onClick (toMsg Internal.Close)
+                ]
+                []
         ]
 
 
-viewButtons : Html.Html Dialog.Msg
-viewButtons =
+viewButtons : Dialog.Customizations body msg -> Html.Html msg
+viewButtons { toMsg } =
     Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
-        [ Html.button [ HtmlAttributes.class "button mr-2", HtmlEvents.onClick Internal.Reload ] [ Html.text "Reload" ]
-        , Html.button [ HtmlAttributes.class "button", HtmlEvents.onClick Internal.Close ] [ Html.text "Close" ]
+        [ Html.button
+            [ HtmlAttributes.class "button mr-2"
+            , HtmlEvents.onClick (toMsg Internal.Reload)
+            ]
+            [ Html.text "Reload" ]
+        , Html.button
+            [ HtmlAttributes.class "button"
+            , HtmlEvents.onClick (toMsg Internal.Close)
+            ]
+            [ Html.text "Close" ]
         ]
 
 
-viewInfoDialog : Internal.SimpleDialogContent -> Html.Html Dialog.Msg
-viewInfoDialog { title, message } =
-    viewModal
+viewInfoDialog : Dialog.Customizations body msg -> Internal.SimpleDialogContent -> Html.Html msg
+viewInfoDialog ({ toMsg } as config) { title, message } =
+    viewModal config
+        { closeOnBackgroundClick = True }
         [ Html.article
             [ HtmlAttributes.class "message is-info" ]
-            [ viewHeader title
+            [ viewHeader config { title = title, showCloseButton = True }
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
                 , Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
-                    [ Html.button [ HtmlAttributes.class "button", HtmlEvents.onClick Internal.Close ] [ Html.text "Close" ] ]
+                    [ Html.button
+                        [ HtmlAttributes.class "button"
+                        , HtmlEvents.onClick (toMsg Internal.Close)
+                        ]
+                        [ Html.text "Close" ]
+                    ]
                 ]
             ]
         ]
 
 
-viewErrorDialog : Internal.SimpleDialogContent -> Html.Html Dialog.Msg
-viewErrorDialog { title, message } =
-    viewModal
+viewErrorDialog : Dialog.Customizations body msg -> Internal.SimpleDialogContent -> Html.Html msg
+viewErrorDialog config { title, message } =
+    viewModal config
+        { closeOnBackgroundClick = True }
         [ Html.article
             [ HtmlAttributes.class "message is-danger" ]
-            [ viewHeader title
+            [ viewHeader config { title = title, showCloseButton = True }
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
-                , viewButtons
+                , viewButtons config
                 ]
             ]
         ]
 
 
-viewHttpErrorDialog : Dialog.Customizations body -> Internal.HttpErrorDialogContent body -> Html.Html Dialog.Msg
+viewHttpErrorDialog : Dialog.Customizations body msg -> Internal.HttpErrorDialogContent body -> Html.Html msg
 viewHttpErrorDialog config { title, message, httpError } =
-    viewModal
+    viewModal config
+        { closeOnBackgroundClick = True }
         [ Html.article
             [ HtmlAttributes.class "message is-danger" ]
-            [ viewHeader title
+            [ viewHeader config { title = title, showCloseButton = True }
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
                 , Html.p [ HtmlAttributes.class "mb-5" ] [ config.viewHttpError httpError ]
-                , viewButtons
+                , viewButtons config
                 ]
             ]
         ]
 
 
-defaultLoadingIndicator : Html.Html Dialog.Msg
+viewOkCancelDialog : Dialog.Customizations body msg -> Internal.OkCancelDialogContent msg -> Html.Html msg
+viewOkCancelDialog config { title, message, ok, cancel } =
+    viewModal config
+        { closeOnBackgroundClick = False }
+        [ Html.article
+            [ HtmlAttributes.class "message is-info" ]
+            [ viewHeader config { title = title, showCloseButton = False }
+            , Html.div [ HtmlAttributes.class "message-body" ]
+                [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
+                , Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
+                    [ Html.button
+                        [ HtmlAttributes.class "button mr-2"
+                        , HtmlEvents.onClick cancel
+                        ]
+                        [ Html.text "Cancel" ]
+                    , Html.button
+                        [ HtmlAttributes.class "button"
+                        , HtmlEvents.onClick ok
+                        ]
+                        [ Html.text "Ok" ]
+                    ]
+                ]
+            ]
+        ]
+
+
+defaultLoadingIndicator : Html.Html msg
 defaultLoadingIndicator =
     Html.progress
         [ HtmlAttributes.class "progress is-large is-info"
@@ -225,7 +278,7 @@ defaultLoadingIndicator =
         []
 
 
-defaultViewHttpError : HttpDetailed.Error String -> Html.Html Dialog.Msg
+defaultViewHttpError : HttpDetailed.Error String -> Html.Html msg
 defaultViewHttpError error =
     case error of
         HttpDetailed.BadUrl url ->

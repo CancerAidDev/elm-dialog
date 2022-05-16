@@ -1,5 +1,5 @@
 module Dialog exposing
-    ( Model, error, httpError, info, loading
+    ( Model, Dialog, error, httpError, info, loading, okCancel
     , Customizations
     , Msg, update
     )
@@ -13,7 +13,7 @@ We recommend checking out the [examples] to get a feel for how it works.
 
 # Model
 
-@docs Model, error, httpError, info, loading
+@docs Model, Dialog, error, httpError, info, loading, okCancel
 
 
 # Configuration
@@ -35,19 +35,19 @@ import Http.Detailed as HttpDetailed
 
 {-| Dialog Model data type.
 -}
-type alias Model body =
-    Maybe (Internal.Dialog body)
+type alias Model body msg =
+    Maybe (Internal.Dialog body msg)
 
 
 {-| Dialog data type.
 -}
-type alias Dialog body =
-    Internal.Dialog body
+type alias Dialog body msg =
+    Internal.Dialog body msg
 
 
 {-| Create a httpError dialog.
 -}
-httpError : { title : String, message : String } -> HttpDetailed.Error body -> Dialog body
+httpError : { title : String, message : String } -> HttpDetailed.Error body -> Dialog body msg
 httpError { title, message } err =
     Internal.DialogHttpError
         { title = title
@@ -58,23 +58,33 @@ httpError { title, message } err =
 
 {-| Create an info dialog.
 -}
-info : { title : String, message : String } -> Dialog body
+info : { title : String, message : String } -> Dialog body msg
 info =
     Internal.DialogInfo
 
 
 {-| Create an error dialog.
 -}
-error : { title : String, message : String } -> Dialog body
+error : { title : String, message : String } -> Dialog body msg
 error =
     Internal.DialogError
 
 
 {-| Create a loading dialog.
 -}
-loading : Dialog body
+loading : Dialog body msg
 loading =
     Internal.Loading
+
+
+okCancel : { title : String, message : String, ok : msg, cancel : msg } -> Dialog body msg
+okCancel { title, message, ok, cancel } =
+    Internal.DialogOkCancel
+        { title = title
+        , message = message
+        , ok = ok
+        , cancel = cancel
+        }
 
 
 
@@ -88,9 +98,10 @@ Use `viewLoadingIndicator` to set a custom loading icon, e.g. a .gif or custom H
 Use `viewHttpError` to render Http.Detailed.Error messages.
 
 -}
-type alias Customizations body =
-    { viewLoadingIndicator : Html.Html Msg
-    , viewHttpError : HttpDetailed.Error body -> Html.Html Msg
+type alias Customizations body msg =
+    { viewLoadingIndicator : Html.Html msg
+    , viewHttpError : HttpDetailed.Error body -> Html.Html msg
+    , toMsg : Msg -> msg
     }
 
 
@@ -110,7 +121,7 @@ type alias Msg =
 
 {-| Update dialog.
 -}
-update : Msg -> Model body -> ( Model body, Cmd Msg )
+update : Msg -> Model body msg -> ( Model body msg, Cmd Msg )
 update msg model =
     case msg of
         Internal.Close ->
