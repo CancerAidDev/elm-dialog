@@ -26,8 +26,18 @@ yarn install
 
 ### CI
 
+The following commands are run as part of the GitHub Actions Workflow:
+
 ```
 yarn elm-format --validate src examples
 yarn elm-review
 yarn elm make
+```
+
+### GitHub Pages
+
+To build new pages run the following command and commit the changes to the repo:
+
+```
+yarn build:pages
 ```
