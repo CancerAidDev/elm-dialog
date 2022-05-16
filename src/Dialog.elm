@@ -1,4 +1,4 @@
-module Dialog exposing (Config, Dialog(..), Error, HttpError, Model, Msg, update)
+module Dialog exposing (Config, Model, Msg, error, httpError, info, loading, update)
 
 import Browser.Navigation as Navigation
 import Dialog.Internal as Internal
@@ -7,31 +7,32 @@ import Http
 import Http.Detailed as HttpDetailed
 
 
-
--- MODEL
-
-
-type Dialog
-    = DialogError Error
-    | DialogHttpError HttpError
-    | Loading
-
-
-type alias Error =
-    { title : String
-    , message : String
-    }
-
-
-type alias HttpError =
-    { title : String
-    , message : String
-    , httpError : HttpDetailed.Error String
-    }
-
-
 type alias Model =
-    Maybe Dialog
+    Maybe Internal.Dialog
+
+
+httpError : { title : String, message : String } -> HttpDetailed.Error String -> Internal.Dialog
+httpError { title, message } err =
+    Internal.DialogHttpError
+        { title = title
+        , message = message
+        , httpError = err
+        }
+
+
+info : { title : String, message : String } -> Internal.Dialog
+info =
+    Internal.DialogInfo
+
+
+error : { title : String, message : String } -> Internal.Dialog
+error =
+    Internal.DialogError
+
+
+loading : Internal.Dialog
+loading =
+    Internal.Loading
 
 
 
@@ -40,6 +41,7 @@ type alias Model =
 
 type alias Config =
     { viewBadStatusError : Http.Metadata -> String -> Html.Html Msg
+    , loadingSpinnerSrc : String
     }
 
 

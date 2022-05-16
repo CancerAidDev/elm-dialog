@@ -38,7 +38,9 @@ init =
 
 type Msg
     = DialogMsg Dialog.Msg
-    | OpenDialog
+    | OpenInfoDialog
+    | OpenErrorDialog
+    | OpenLoadingDialog
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -48,12 +50,26 @@ update msg model =
             Dialog.update subMsg model
                 |> Tuple.mapSecond (Cmd.map DialogMsg)
 
-        OpenDialog ->
+        OpenInfoDialog ->
             ( Just <|
-                Dialog.DialogError
+                Dialog.info
                     { title = "Hello"
                     , message = "from elm-dialog"
                     }
+            , Cmd.none
+            )
+
+        OpenErrorDialog ->
+            ( Just <|
+                Dialog.error
+                    { title = "Hello"
+                    , message = "from elm-dialog"
+                    }
+            , Cmd.none
+            )
+
+        OpenLoadingDialog ->
+            ( Just <| Dialog.loading
             , Cmd.none
             )
 
@@ -66,9 +82,11 @@ view : Model -> Html Msg
 view model =
     div [ class "p-4" ]
         [ h1 [ class "title" ] [ text "Example" ]
-        , button [ class "button", onClick OpenDialog ] [ text "Open Dialog" ]
+        , button [ class "button", onClick OpenInfoDialog ] [ text "Open Info Dialog" ]
+        , button [ class "button ml-3", onClick OpenErrorDialog ] [ text "Open Error Dialog" ]
+        , button [ class "button ml-3", onClick OpenLoadingDialog ] [ text "Open Loading Spinner" ]
         , Html.map DialogMsg <|
             DialogBulma.view
-                { viewBadStatusError = \_ _ -> text "Error :(" }
+                { viewBadStatusError = \_ _ -> text "Error :(", loadingSpinnerSrc = "" }
                 model
         ]

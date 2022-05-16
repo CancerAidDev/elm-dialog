@@ -1,5 +1,6 @@
 module Dialog.Bulma exposing (view)
 
+import Accessibility.Aria as Aria
 import Dialog
 import Dialog.Internal as Internal
 import Html
@@ -9,16 +10,19 @@ import Html.Extra as HtmlExtra
 import Http.Detailed as HttpDetailed
 
 
-view : Dialog.Config -> Maybe Dialog.Dialog -> Html.Html Dialog.Msg
+view : Dialog.Config -> Dialog.Model -> Html.Html Dialog.Msg
 view config maybeDialog =
     case maybeDialog of
-        Just Dialog.Loading ->
-            viewLoadingDialog
+        Just Internal.Loading ->
+            viewLoadingDialog config
 
-        Just (Dialog.DialogError error) ->
+        Just (Internal.DialogInfo info) ->
+            viewInfoDialog info
+
+        Just (Internal.DialogError error) ->
             viewErrorDialog error
 
-        Just (Dialog.DialogHttpError error) ->
+        Just (Internal.DialogHttpError error) ->
             viewHttpErrorDialog config error
 
         Nothing ->
@@ -34,8 +38,8 @@ viewModal children =
         ]
 
 
-viewLoadingDialog : Html.Html Dialog.Msg
-viewLoadingDialog =
+viewLoadingDialog : Dialog.Config -> Html.Html Dialog.Msg
+viewLoadingDialog { loadingSpinnerSrc } =
     viewModal
         [ Html.div
             [ HtmlAttributes.class "is-flex is-justify-content-center" ]
@@ -44,7 +48,7 @@ viewLoadingDialog =
                 [ Html.figure [ HtmlAttributes.class "image" ]
                     [ Html.img
                         [ HtmlAttributes.class "p-5 is-rounded has-background-white"
-                        , HtmlAttributes.src "/public/images/loading.gif"
+                        , HtmlAttributes.src loadingSpinnerSrc
                         ]
                         []
                     ]
@@ -53,40 +57,65 @@ viewLoadingDialog =
         ]
 
 
-viewErrorDialog : Dialog.Error -> Html.Html Dialog.Msg
-viewErrorDialog { title, message } =
+viewHeader : String -> Html.Html Dialog.Msg
+viewHeader title =
+    Html.div [ HtmlAttributes.class "message-header" ]
+        [ Html.p [] [ Html.text title ]
+        , Html.button
+            [ HtmlAttributes.class "delete"
+            , Aria.label "close"
+            , HtmlEvents.onClick Internal.Close
+            ]
+            []
+        ]
+
+
+viewButtons : Html.Html Dialog.Msg
+viewButtons =
+    Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
+        [ Html.button [ HtmlAttributes.class "button mr-2", HtmlEvents.onClick Internal.Reload ] [ Html.text "Reload" ]
+        , Html.button [ HtmlAttributes.class "button", HtmlEvents.onClick Internal.Close ] [ Html.text "Close" ]
+        ]
+
+
+viewInfoDialog : Internal.SimpleDialogContent -> Html.Html Dialog.Msg
+viewInfoDialog { title, message } =
     viewModal
         [ Html.article
-            [ HtmlAttributes.class "message is-danger" ]
-            [ Html.div [ HtmlAttributes.class "message-header" ]
-                [ Html.p [] [ Html.text title ]
-                ]
+            [ HtmlAttributes.class "message is-info" ]
+            [ viewHeader title
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
-                , Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
-                    [ Html.button [ HtmlAttributes.class "button is-danger mr-2", HtmlEvents.onClick Internal.Reload ] [ Html.text "Reload" ]
-                    , Html.button [ HtmlAttributes.class "button", HtmlEvents.onClick Internal.Close ] [ Html.text "Close" ]
-                    ]
+                , viewButtons
                 ]
             ]
         ]
 
 
-viewHttpErrorDialog : Dialog.Config -> Dialog.HttpError -> Html.Html Dialog.Msg
+viewErrorDialog : Internal.SimpleDialogContent -> Html.Html Dialog.Msg
+viewErrorDialog { title, message } =
+    viewModal
+        [ Html.article
+            [ HtmlAttributes.class "message is-danger" ]
+            [ viewHeader title
+            , Html.div [ HtmlAttributes.class "message-body" ]
+                [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
+                , viewButtons
+                ]
+            ]
+        ]
+
+
+viewHttpErrorDialog : Dialog.Config -> Internal.HttpErrorDialogContent -> Html.Html Dialog.Msg
 viewHttpErrorDialog config { title, message, httpError } =
     viewModal
         [ Html.article
             [ HtmlAttributes.class "message is-danger" ]
-            [ Html.div [ HtmlAttributes.class "message-header" ]
-                [ Html.p [] [ Html.text title ]
-                ]
+            [ viewHeader title
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
                 , Html.p [ HtmlAttributes.class "mb-5" ] [ viewHttpError config httpError ]
-                , Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
-                    [ Html.button [ HtmlAttributes.class "button is-danger mr-2", HtmlEvents.onClick Internal.Reload ] [ Html.text "Reload" ]
-                    , Html.button [ HtmlAttributes.class "button", HtmlEvents.onClick Internal.Close ] [ Html.text "Close" ]
-                    ]
+                , viewButtons
                 ]
             ]
         ]
