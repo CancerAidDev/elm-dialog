@@ -180,7 +180,8 @@ viewInfoDialog { title, message } =
             [ viewHeader title
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
-                , viewButtons
+                , Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
+                    [ Html.button [ HtmlAttributes.class "button", HtmlEvents.onClick Internal.Close ] [ Html.text "Close" ] ]
                 ]
             ]
         ]
