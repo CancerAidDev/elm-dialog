@@ -6,9 +6,12 @@
   "type": "module",
   "scripts": {},
   "devDependencies": {
+    "@parcel/transformer-elm": "^2.5.0",
+    "bulma": "^0.9.4",
     "elm": "^0.19.1-5",
     "elm-format": "^0.8.5",
     "elm-review": "^2.7.1",
-    "elm-test": "^0.19.1-revision7"
+    "elm-test": "^0.19.1-revision7",
+    "parcel": "^2.5.0"
   }
 }
