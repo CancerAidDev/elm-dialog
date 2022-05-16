@@ -4,7 +4,9 @@
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "build:pages": "parcel build examples/index.html --dist-dir docs --public-url /elm-dialog"
+  },
   "devDependencies": {
     "@parcel/transformer-elm": "^2.5.0",
     "bulma": "^0.9.4",
