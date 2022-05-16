@@ -6,7 +6,6 @@ import Dialog.Bulma as DialogBulma
 import Html exposing (Html, button, div, h1, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
-import Json.Decode as Decode
 
 
 main : Program {} Model Msg
@@ -53,8 +52,8 @@ update msg model =
         OpenInfoDialog ->
             ( Just <|
                 Dialog.info
-                    { title = "Hello"
-                    , message = "from elm-dialog"
+                    { title = "Info"
+                    , message = "Hello from elm-dialog"
                     }
             , Cmd.none
             )
@@ -62,8 +61,8 @@ update msg model =
         OpenErrorDialog ->
             ( Just <|
                 Dialog.error
-                    { title = "Hello"
-                    , message = "from elm-dialog"
+                    { title = "Error"
+                    , message = "Something went wrong :("
                     }
             , Cmd.none
             )
@@ -85,5 +84,5 @@ view model =
         , button [ class "button", onClick OpenInfoDialog ] [ text "Open Info Dialog" ]
         , button [ class "button ml-3", onClick OpenErrorDialog ] [ text "Open Error Dialog" ]
         , button [ class "button ml-3", onClick OpenLoadingDialog ] [ text "Open Loading Dialog" ]
-        , Html.map DialogMsg <| DialogBulma.view DialogBulma.defaultConfig model
+        , Html.map DialogMsg <| DialogBulma.view DialogBulma.defaultCustomizations model
         ]
