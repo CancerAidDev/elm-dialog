@@ -18,13 +18,13 @@ We recommend checking out the [examples] ([code]) to get a feel for how it works
 [examples]: https://canceraiddev.github.io/elm-dialog/
 [code]: https://github.com/canceraiddev/elm-dialog/tree/main/examples
 
-## Setup
+## Development
 
 ```
 yarn install
 ```
 
-## CI
+### CI
 
 ```
 yarn elm-format --validate src examples
