@@ -30,19 +30,24 @@ We recommend checking out the [examples] to get a feel for how it works.
 import Browser.Navigation as Navigation
 import Dialog.Internal as Internal
 import Html
-import Http
 import Http.Detailed as HttpDetailed
 
 
 {-| Dialog Model data type.
 -}
-type alias Model =
-    Maybe Internal.Dialog
+type alias Model body =
+    Maybe (Internal.Dialog body)
+
+
+{-| Dialog data type.
+-}
+type alias Dialog body =
+    Internal.Dialog body
 
 
 {-| Create a httpError dialog.
 -}
-httpError : { title : String, message : String } -> HttpDetailed.Error String -> Internal.Dialog
+httpError : { title : String, message : String } -> HttpDetailed.Error body -> Dialog body
 httpError { title, message } err =
     Internal.DialogHttpError
         { title = title
@@ -53,21 +58,21 @@ httpError { title, message } err =
 
 {-| Create an info dialog.
 -}
-info : { title : String, message : String } -> Internal.Dialog
+info : { title : String, message : String } -> Dialog body
 info =
     Internal.DialogInfo
 
 
 {-| Create an error dialog.
 -}
-error : { title : String, message : String } -> Internal.Dialog
+error : { title : String, message : String } -> Dialog body
 error =
     Internal.DialogError
 
 
 {-| Create a loading dialog.
 -}
-loading : Internal.Dialog
+loading : Dialog body
 loading =
     Internal.Loading
 
@@ -78,14 +83,14 @@ loading =
 
 {-| Customizations for dialog.
 
-Use `viewBadStatusError` to render Http.Detailed.BadStatus error messages.
-
 Use `viewLoadingIndicator` to set a custom loading icon, e.g. a .gif or custom HTML element.
 
+Use `viewHttpError` to render Http.Detailed.Error messages.
+
 -}
-type alias Customizations =
-    { viewBadStatusError : Http.Metadata -> String -> Html.Html Msg
-    , viewLoadingIndicator : Html.Html Msg
+type alias Customizations body =
+    { viewLoadingIndicator : Html.Html Msg
+    , viewHttpError : HttpDetailed.Error body -> Html.Html Msg
     }
 
 
@@ -105,7 +110,7 @@ type alias Msg =
 
 {-| Update dialog.
 -}
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model body -> ( Model body, Cmd Msg )
 update msg model =
     case msg of
         Internal.Close ->

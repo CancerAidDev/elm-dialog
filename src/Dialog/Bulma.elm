@@ -7,7 +7,7 @@ module Dialog.Bulma exposing
 
     -- MODEL
     type alias Model =
-        Dialog.Model
+        Dialog.Model String
 
     init : ( Model, Cmd Msg )
     init =
@@ -18,6 +18,7 @@ module Dialog.Bulma exposing
         = DialogMsg Dialog.Msg
         | OpenInfoDialog
         | OpenErrorDialog
+        | OpenHttpErrorDialog
         | OpenLoadingDialog
 
     update : Msg -> Model -> ( Model, Cmd Msg )
@@ -45,6 +46,16 @@ module Dialog.Bulma exposing
                 , Cmd.none
                 )
 
+            OpenHttpErrorDialog ->
+                ( Just <|
+                    Dialog.httpError
+                        { title = "Error"
+                        , message = "Something went wrong :("
+                        }
+                        HttpDetailed.Timeout
+                , Cmd.none
+                )
+
             OpenLoadingDialog ->
                 ( Just <| Dialog.loading
                 , Cmd.none
@@ -57,8 +68,9 @@ module Dialog.Bulma exposing
             [ h1 [ class "title" ] [ text "Elm Dialog Example" ]
             , button [ class "button", onClick OpenInfoDialog ] [ text "Open Info Dialog" ]
             , button [ class "button ml-3", onClick OpenErrorDialog ] [ text "Open Error Dialog" ]
+            , button [ class "button ml-3", onClick OpenHttpErrorDialog ] [ text "Open Http Error Dialog" ]
             , button [ class "button ml-3", onClick OpenLoadingDialog ] [ text "Open Loading Dialog" ]
-            , Html.map DialogMsg <| DialogBulma.view DialogBulma.defaultConfig model
+            , Html.map DialogMsg <| DialogBulma.view DialogBulma.defaultCustomizations model
             ]
 
 We recommend checking out the [examples] to get a feel for how it works.
@@ -89,17 +101,10 @@ import Http.Detailed as HttpDetailed
 
 {-| Default `Dialog` customizations for Bulma.
 -}
-defaultCustomizations : Dialog.Customizations
+defaultCustomizations : Dialog.Customizations String
 defaultCustomizations =
-    { viewBadStatusError =
-        \{ statusCode, statusText } _ ->
-            Html.text <| String.fromInt statusCode ++ " Error (" ++ statusText ++ ")"
-    , viewLoadingIndicator =
-        Html.progress
-            [ HtmlAttributes.class "progress is-large is-info"
-            , HtmlAttributes.max "100"
-            ]
-            []
+    { viewLoadingIndicator = defaultLoadingIndicator
+    , viewHttpError = defaultViewHttpError
     }
 
 
@@ -109,7 +114,7 @@ defaultCustomizations =
 [message]: https://bulma.io/documentation/components/message/
 
 -}
-view : Dialog.Customizations -> Dialog.Model -> Html.Html Dialog.Msg
+view : Dialog.Customizations body -> Dialog.Model body -> Html.Html Dialog.Msg
 view config maybeDialog =
     case maybeDialog of
         Just Internal.Loading ->
@@ -137,7 +142,7 @@ viewModal children =
         ]
 
 
-viewLoadingDialog : Dialog.Customizations -> Html.Html Dialog.Msg
+viewLoadingDialog : Dialog.Customizations body -> Html.Html Dialog.Msg
 viewLoadingDialog { viewLoadingIndicator } =
     viewModal
         [ Html.div
@@ -195,7 +200,7 @@ viewErrorDialog { title, message } =
         ]
 
 
-viewHttpErrorDialog : Dialog.Customizations -> Internal.HttpErrorDialogContent -> Html.Html Dialog.Msg
+viewHttpErrorDialog : Dialog.Customizations body -> Internal.HttpErrorDialogContent body -> Html.Html Dialog.Msg
 viewHttpErrorDialog config { title, message, httpError } =
     viewModal
         [ Html.article
@@ -203,15 +208,24 @@ viewHttpErrorDialog config { title, message, httpError } =
             [ viewHeader title
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
-                , Html.p [ HtmlAttributes.class "mb-5" ] [ viewHttpError config httpError ]
+                , Html.p [ HtmlAttributes.class "mb-5" ] [ config.viewHttpError httpError ]
                 , viewButtons
                 ]
             ]
         ]
 
 
-viewHttpError : Dialog.Customizations -> HttpDetailed.Error String -> Html.Html Dialog.Msg
-viewHttpError config error =
+defaultLoadingIndicator : Html.Html Dialog.Msg
+defaultLoadingIndicator =
+    Html.progress
+        [ HtmlAttributes.class "progress is-large is-info"
+        , HtmlAttributes.max "100"
+        ]
+        []
+
+
+defaultViewHttpError : HttpDetailed.Error String -> Html.Html Dialog.Msg
+defaultViewHttpError error =
     case error of
         HttpDetailed.BadUrl url ->
             Html.text <| url ++ " is an invalid URL"
@@ -222,8 +236,12 @@ viewHttpError config error =
         HttpDetailed.NetworkError ->
             Html.text <| "Network connection error, the server cannot be reached"
 
-        HttpDetailed.BadStatus metadata body ->
-            config.viewBadStatusError metadata body
+        HttpDetailed.BadStatus { statusCode, statusText } body ->
+            Html.div []
+                [ Html.p [] [ Html.text <| String.fromInt statusCode ++ " Error" ]
+                , Html.p [] [ Html.text statusText ]
+                , Html.p [] [ Html.text body ]
+                ]
 
         HttpDetailed.BadBody _ _ err ->
             Html.text <| err

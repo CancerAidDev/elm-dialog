@@ -16,10 +16,10 @@ type Msg
 -- MODEL
 
 
-type Dialog
+type Dialog body
     = DialogInfo SimpleDialogContent
     | DialogError SimpleDialogContent
-    | DialogHttpError HttpErrorDialogContent
+    | DialogHttpError (HttpErrorDialogContent body)
     | Loading
 
 
@@ -34,5 +34,5 @@ type alias SimpleDialogContent =
     DialogContent {}
 
 
-type alias HttpErrorDialogContent =
-    DialogContent { httpError : HttpDetailed.Error String }
+type alias HttpErrorDialogContent body =
+    DialogContent { httpError : HttpDetailed.Error body }
