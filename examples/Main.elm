@@ -80,7 +80,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div [ class "p-4" ]
-        [ h1 [ class "title" ] [ text "Example" ]
+        [ h1 [ class "title" ] [ text "Elm Dialog Example" ]
         , button [ class "button", onClick OpenInfoDialog ] [ text "Open Info Dialog" ]
         , button [ class "button ml-3", onClick OpenErrorDialog ] [ text "Open Error Dialog" ]
         , button [ class "button ml-3", onClick OpenLoadingDialog ] [ text "Open Loading Dialog" ]

@@ -13,9 +13,10 @@ Currently supports the following dialogs:
 
 ## Examples
 
-We recommend checking out the [examples] to get a feel for how it works.
+We recommend checking out the [examples] ([code]) to get a feel for how it works.
 
-[examples]: https://github.com/canceraiddev/elm-dialog/tree/main/examples
+[examples]: https://canceraiddev.github.io/elm-dialog/
+[code]: https://github.com/canceraiddev/elm-dialog/tree/main/examples
 
 ## Setup
 
