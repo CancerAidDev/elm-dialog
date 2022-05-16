@@ -1,4 +1,4 @@
-module Dialog.Bulma exposing (view)
+module Dialog.Bulma exposing (defaultConfig, view)
 
 import Accessibility.Aria as Aria
 import Dialog
@@ -8,6 +8,20 @@ import Html.Attributes as HtmlAttributes
 import Html.Events as HtmlEvents
 import Html.Extra as HtmlExtra
 import Http.Detailed as HttpDetailed
+
+
+defaultConfig : Dialog.Config
+defaultConfig =
+    { viewBadStatusError =
+        \{ statusCode, statusText } _ ->
+            Html.text <| String.fromInt statusCode ++ " Error (" ++ statusText ++ ")"
+    , viewLoadingIndicator =
+        Html.progress
+            [ HtmlAttributes.class "progress is-large is-info"
+            , HtmlAttributes.max "100"
+            ]
+            []
+    }
 
 
 view : Dialog.Config -> Dialog.Model -> Html.Html Dialog.Msg
@@ -39,21 +53,11 @@ viewModal children =
 
 
 viewLoadingDialog : Dialog.Config -> Html.Html Dialog.Msg
-viewLoadingDialog { loadingSpinnerSrc } =
+viewLoadingDialog { viewLoadingIndicator } =
     viewModal
         [ Html.div
             [ HtmlAttributes.class "is-flex is-justify-content-center" ]
-            [ Html.figure
-                [ HtmlAttributes.class "image" ]
-                [ Html.figure [ HtmlAttributes.class "image" ]
-                    [ Html.img
-                        [ HtmlAttributes.class "p-5 is-rounded has-background-white"
-                        , HtmlAttributes.src loadingSpinnerSrc
-                        ]
-                        []
-                    ]
-                ]
-            ]
+            [ viewLoadingIndicator ]
         ]
 
 

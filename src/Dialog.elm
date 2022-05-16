@@ -41,7 +41,7 @@ loading =
 
 type alias Config =
     { viewBadStatusError : Http.Metadata -> String -> Html.Html Msg
-    , loadingSpinnerSrc : String
+    , viewLoadingIndicator : Html.Html Msg
     }
 
 

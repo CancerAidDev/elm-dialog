@@ -84,9 +84,6 @@ view model =
         [ h1 [ class "title" ] [ text "Example" ]
         , button [ class "button", onClick OpenInfoDialog ] [ text "Open Info Dialog" ]
         , button [ class "button ml-3", onClick OpenErrorDialog ] [ text "Open Error Dialog" ]
-        , button [ class "button ml-3", onClick OpenLoadingDialog ] [ text "Open Loading Spinner" ]
-        , Html.map DialogMsg <|
-            DialogBulma.view
-                { viewBadStatusError = \_ _ -> text "Error :(", loadingSpinnerSrc = "" }
-                model
+        , button [ class "button ml-3", onClick OpenLoadingDialog ] [ text "Open Loading Dialog" ]
+        , Html.map DialogMsg <| DialogBulma.view DialogBulma.defaultConfig model
         ]
