@@ -1,9 +1,9 @@
 {
     "type": "package",
-    "name": "canceraiddev/elm-sortable-table",
-    "summary": "Sortable (and paginated) tables for data of any shape.",
+    "name": "canceraiddev/elm-dialog",
+    "summary": "Modal dialog with optional Bulma styling",
     "license": "Apache-2.0",
-    "version": "2.0.0",
+    "version": "1.0.0",
     "exposed-modules": [
         "Dialog",
         "Dialog.Bulma"

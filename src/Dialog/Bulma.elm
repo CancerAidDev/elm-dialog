@@ -1,4 +1,25 @@
-module Dialog.Bulma exposing (defaultConfig, view)
+module Dialog.Bulma exposing
+    ( defaultCustomizations
+    , view
+    )
+
+{-| [Bulma](https://bulma.io) specific customizations and view for `Dialog`.
+
+We recommend checking out the [examples] to get a feel for how it works.
+
+[examples]: https://github.com/canceraiddev/elm-dialog/tree/main/examples
+
+
+# Configuration
+
+@docs defaultCustomizations
+
+
+# View
+
+@docs view
+
+-}
 
 import Accessibility.Aria as Aria
 import Dialog
@@ -10,8 +31,10 @@ import Html.Extra as HtmlExtra
 import Http.Detailed as HttpDetailed
 
 
-defaultConfig : Dialog.Config
-defaultConfig =
+{-| Default `Dialog` customizations for Bulma.
+-}
+defaultCustomizations : Dialog.Customizations
+defaultCustomizations =
     { viewBadStatusError =
         \{ statusCode, statusText } _ ->
             Html.text <| String.fromInt statusCode ++ " Error (" ++ statusText ++ ")"
@@ -24,7 +47,13 @@ defaultConfig =
     }
 
 
-view : Dialog.Config -> Dialog.Model -> Html.Html Dialog.Msg
+{-| View Dialog using Bulma css classes. Built using [modal] and [message] components.
+
+[modal]: https://bulma.io/documentation/components/modal/
+[message]: https://bulma.io/documentation/components/message/
+
+-}
+view : Dialog.Customizations -> Dialog.Model -> Html.Html Dialog.Msg
 view config maybeDialog =
     case maybeDialog of
         Just Internal.Loading ->
@@ -52,7 +81,7 @@ viewModal children =
         ]
 
 
-viewLoadingDialog : Dialog.Config -> Html.Html Dialog.Msg
+viewLoadingDialog : Dialog.Customizations -> Html.Html Dialog.Msg
 viewLoadingDialog { viewLoadingIndicator } =
     viewModal
         [ Html.div
@@ -110,7 +139,7 @@ viewErrorDialog { title, message } =
         ]
 
 
-viewHttpErrorDialog : Dialog.Config -> Internal.HttpErrorDialogContent -> Html.Html Dialog.Msg
+viewHttpErrorDialog : Dialog.Customizations -> Internal.HttpErrorDialogContent -> Html.Html Dialog.Msg
 viewHttpErrorDialog config { title, message, httpError } =
     viewModal
         [ Html.article
@@ -125,7 +154,7 @@ viewHttpErrorDialog config { title, message, httpError } =
         ]
 
 
-viewHttpError : Dialog.Config -> HttpDetailed.Error String -> Html.Html Dialog.Msg
+viewHttpError : Dialog.Customizations -> HttpDetailed.Error String -> Html.Html Dialog.Msg
 viewHttpError config error =
     case error of
         HttpDetailed.BadUrl url ->
