@@ -77,6 +77,8 @@ loading =
     Internal.Loading
 
 
+{-| Create an OK/Cancel dialog.
+-}
 okCancel : { title : String, message : String, ok : msg, cancel : msg } -> Dialog body msg
 okCancel { title, message, ok, cancel } =
     Internal.DialogOkCancel
