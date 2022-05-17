@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "parcel examples/index.html",
     "build:pages": "rm -rf docs && parcel build examples/index.html --dist-dir docs --public-url /elm-dialog"
   },
   "devDependencies": {
