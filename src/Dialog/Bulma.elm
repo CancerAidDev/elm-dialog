@@ -175,11 +175,11 @@ viewHeader { toMsg } { title, showCloseButton } =
         ]
 
 
-viewButtons : Dialog.Customizations body msg -> Html.Html msg
-viewButtons { toMsg } =
+viewErrorButtons : Dialog.Customizations body msg -> Html.Html msg
+viewErrorButtons { toMsg } =
     Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
         [ Html.button
-            [ HtmlAttributes.class "button mr-2"
+            [ HtmlAttributes.class "button is-danger mr-2"
             , HtmlEvents.onClick (toMsg Internal.Reload)
             ]
             [ Html.text "Reload" ]
@@ -221,7 +221,7 @@ viewErrorDialog config { title, message } =
             [ viewHeader config { title = title, showCloseButton = True }
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
-                , viewButtons config
+                , viewErrorButtons config
                 ]
             ]
         ]
@@ -237,7 +237,7 @@ viewHttpErrorDialog config { title, message, httpError } =
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
                 , Html.p [ HtmlAttributes.class "mb-5" ] [ config.viewHttpError httpError ]
-                , viewButtons config
+                , viewErrorButtons config
                 ]
             ]
         ]
