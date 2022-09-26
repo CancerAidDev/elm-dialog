@@ -29,7 +29,6 @@ We recommend checking out the [examples] to get a feel for how it works.
 
 import Browser.Navigation as Navigation
 import Dialog.Internal as Internal
-import Html
 import Http.Detailed as HttpDetailed
 
 
@@ -79,7 +78,7 @@ loading =
 
 {-| Create an OK/Cancel dialog.
 -}
-okCancel : { title : String, message : String, ok : msg, cancel : msg } -> Dialog body msg
+okCancel : { title : String, message : Html.Html Msg.Msg, ok : msg, cancel : msg } -> Dialog body msg
 okCancel { title, message, ok, cancel } =
     Internal.DialogOkCancel
         { title = title
