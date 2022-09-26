@@ -2,6 +2,7 @@ module Dialog exposing
     ( Model, Dialog, error, httpError, info, loading, okCancel
     , Customizations
     , Msg, update
+    , okCancelHtml
     )
 
 {-| Simple Dialog.
@@ -29,6 +30,8 @@ We recommend checking out the [examples] to get a feel for how it works.
 
 import Browser.Navigation as Navigation
 import Dialog.Internal as Internal
+import Html
+import Html.Attributes exposing (title)
 import Http.Detailed as HttpDetailed
 
 
@@ -78,7 +81,7 @@ loading =
 
 {-| Create an OK/Cancel dialog.
 -}
-okCancel : { title : String, message : Html.Html Msg.Msg, ok : msg, cancel : msg } -> Dialog body msg
+okCancel : { title : String, message : String, ok : msg, cancel : msg } -> Dialog body msg
 okCancel { title, message, ok, cancel } =
     Internal.DialogOkCancel
         { title = title
@@ -86,6 +89,17 @@ okCancel { title, message, ok, cancel } =
         , ok = ok
         , cancel = cancel
         }
+
+
+okCancelHtml : { title : String, message : Html.Html msg, ok : msg, cancel : msg } -> Bool -> Dialog body msg
+okCancelHtml { title, message, ok, cancel } alert =
+    Internal.DialogOkCancelAlert
+        { title = title
+        , message = message
+        , ok = ok
+        , cancel = cancel
+        }
+        alert
 
 
 

@@ -134,6 +134,9 @@ view config maybeDialog =
         Just (Internal.DialogOkCancel okCancel) ->
             viewOkCancelDialog config okCancel
 
+        Just (Internal.DialogOkCancelAlert okCancelHtml alert) ->
+            viewOkCancelDialogAlert config okCancelHtml alert
+
         Nothing ->
             HtmlExtra.nothing
 
@@ -252,6 +255,41 @@ viewOkCancelDialog config { title, message, ok, cancel } =
             [ viewHeader config { title = title, showCloseButton = False }
             , Html.div [ HtmlAttributes.class "message-body" ]
                 [ Html.p [ HtmlAttributes.class "mb-4" ] [ Html.text message ]
+                , Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
+                    [ Html.button
+                        [ HtmlAttributes.class "button mr-2"
+                        , HtmlEvents.onClick cancel
+                        ]
+                        [ Html.text "Cancel" ]
+                    , Html.button
+                        [ HtmlAttributes.class "button"
+                        , HtmlEvents.onClick ok
+                        ]
+                        [ Html.text "Ok" ]
+                    ]
+                ]
+            ]
+        ]
+
+
+viewOkCancelDialogAlert : Dialog.Customizations body msg -> Internal.OkCancelHtmlMessageDialogContent msg -> Bool -> Html.Html msg
+viewOkCancelDialogAlert config { title, message, ok, cancel } alert =
+    let
+        dialogColor : String
+        dialogColor =
+            if alert == True then
+                "message is-danger"
+
+            else
+                "message is-info"
+    in
+    viewModal config
+        { closeOnBackgroundClick = False }
+        [ Html.article
+            [ HtmlAttributes.class dialogColor ]
+            [ viewHeader config { title = title, showCloseButton = False }
+            , Html.div [ HtmlAttributes.class "message-body" ]
+                [ Html.p [ HtmlAttributes.class "mb-4" ] [ message ]
                 , Html.div [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
                     [ Html.button
                         [ HtmlAttributes.class "button mr-2"

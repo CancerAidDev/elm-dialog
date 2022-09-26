@@ -1,5 +1,6 @@
 module Dialog.Internal exposing (..)
 
+import Html
 import Http.Detailed as HttpDetailed
 
 
@@ -22,6 +23,7 @@ type Dialog body msg
     | DialogHttpError (HttpErrorDialogContent body)
     | DialogOkCancel (OkCancelDialogContent msg)
     | Loading
+    | DialogOkCancelAlert (OkCancelHtmlMessageDialogContent msg) Bool
 
 
 type alias DialogContent a =
@@ -41,3 +43,7 @@ type alias HttpErrorDialogContent body =
 
 type alias OkCancelDialogContent msg =
     DialogContent { ok : msg, cancel : msg }
+
+
+type alias OkCancelHtmlMessageDialogContent msg =
+    { title : String, message : Html.Html msg, ok : msg, cancel : msg }
