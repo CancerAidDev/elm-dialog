@@ -44,7 +44,7 @@ type Msg
     | OpenErrorDialog
     | OpenHttpErrorDialog
     | OpenOkCancelDialog
-    | OpenOkCancelAlertDialog 
+    | OpenOkCancelAlertDialog
     | OpenLoadingDialog
     | Ok
     | Cancel
@@ -112,12 +112,13 @@ update msg model =
             ( { model
                 | dialog =
                     Just <|
-                        Dialog.okCancelHtml 
+                        Dialog.okCancelHtml
                             { title = "Hello"
-                            , message = Html.div[][Html.li [][Html.text "1"], Html.li [][Html.text "2"] ]
+                            , message = Html.div [] [ Html.li [] [ Html.text "1" ], Html.li [] [ Html.text "2" ] ]
                             , ok = Ok
                             , cancel = Cancel
-                            } False
+                            }
+                            False
               }
             , Cmd.none
             )
