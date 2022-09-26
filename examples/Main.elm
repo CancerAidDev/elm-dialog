@@ -44,6 +44,7 @@ type Msg
     | OpenErrorDialog
     | OpenHttpErrorDialog
     | OpenOkCancelDialog
+    | OpenOkCancelAlertDialog 
     | OpenLoadingDialog
     | Ok
     | Cancel
@@ -107,6 +108,20 @@ update msg model =
             , Cmd.none
             )
 
+        OpenOkCancelAlertDialog ->
+            ( { model
+                | dialog =
+                    Just <|
+                        Dialog.okCancelHtml 
+                            { title = "Hello"
+                            , message = Html.div[][Html.li [][Html.text "1"], Html.li [][Html.text "2"] ]
+                            , ok = Ok
+                            , cancel = Cancel
+                            } False
+              }
+            , Cmd.none
+            )
+
         OpenLoadingDialog ->
             ( { model
                 | dialog = Just <| Dialog.loading
@@ -134,6 +149,7 @@ view model =
         , button [ class "button ml-3", onClick OpenHttpErrorDialog ] [ text "Open Http Error Dialog" ]
         , button [ class "button ml-3", onClick OpenLoadingDialog ] [ text "Open Loading Dialog" ]
         , button [ class "button ml-3", onClick OpenOkCancelDialog ] [ text "Open Ok Cancel Dialog" ]
+        , button [ class "button ml-3", onClick OpenOkCancelAlertDialog ] [ text "Open Ok Cancel Alert Dialog" ]
         , Html.div [ class "mt-4" ] [ Html.text model.letterBox ]
         , DialogBulma.view (DialogBulma.defaultCustomizations DialogMsg) model.dialog
         ]
