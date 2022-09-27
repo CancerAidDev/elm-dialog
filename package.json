@@ -9,12 +9,12 @@
     "build:pages": "rm -rf docs && parcel build examples/index.html --dist-dir docs --public-url /elm-dialog"
   },
   "devDependencies": {
-    "@parcel/transformer-elm": "^2.5.0",
+    "@parcel/transformer-elm": "^2.7.0",
     "bulma": "^0.9.4",
     "elm": "^0.19.1-5",
     "elm-format": "^0.8.5",
-    "elm-review": "^2.7.1",
-    "elm-test": "^0.19.1-revision7",
-    "parcel": "^2.5.0"
+    "elm-review": "^2.7.5",
+    "elm-test": "^0.19.1-revision9",
+    "parcel": "^2.7.0"
   }
 }
