@@ -1,15 +1,6 @@
 # elm-dialog
 
-Elm dialog for showing modal information, errors, and loading status.
-
-Customization for [Bulma](https://bulma.io) is provided in `Dialog.Bulma`.
-
-Currently supports the following dialogs:
-
-- Info
-- Error
-- HttpError
-- Loading
+Elm dialog for showing modal information, errors, and loading status using Bulma css.
 
 ## Examples
 
