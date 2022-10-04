@@ -22,16 +22,23 @@ main =
 -- MODEL
 
 
+type Dialog
+    = Info
+    | Error
+    | OkCancel
+    | Loading
+
+
 type alias Model =
-    { dialog : Maybe (Dialog.Config Msg)
-    , loading : Bool
-    , letterBox : String
+    { dialog : Maybe Dialog
+    , approve : Bool
+    , letterBox : Char
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { dialog = Nothing, loading = False, letterBox = "📭" }, Cmd.none )
+    ( { dialog = Nothing, approve = False, letterBox = '📭' }, Cmd.none )
 
 
 
@@ -46,6 +53,7 @@ type Msg
     | CloseDialog
     | Ok
     | Cancel
+    | SetApprove Bool
     | Reload
 
 
@@ -53,88 +61,28 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         OpenInfoDialog ->
-            ( { model
-                | dialog =
-                    Just
-                        (Dialog.config CloseDialog
-                            |> Dialog.info
-                            |> Dialog.title "Info"
-                            |> Dialog.body [] [ Html.text "Hello from elm-dialog" ]
-                            |> Dialog.footer [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
-                                [ Html.button
-                                    [ HtmlAttributes.class "button"
-                                    , HtmlEvents.onClick CloseDialog
-                                    ]
-                                    [ Html.text "Close" ]
-                                ]
-                        )
-              }
-            , Cmd.none
-            )
+            ( { model | dialog = Just Info }, Cmd.none )
 
         OpenErrorDialog ->
-            ( { model
-                | dialog =
-                    Just
-                        (Dialog.config CloseDialog
-                            |> Dialog.danger
-                            |> Dialog.title "Error"
-                            |> Dialog.closeOnBackgroundClick False
-                            |> Dialog.showCloseIcon False
-                            |> Dialog.body [] [ Html.text "Something went wrong :(" ]
-                            |> Dialog.footer [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
-                                [ Html.button
-                                    [ HtmlAttributes.class "button is-danger mr-2"
-                                    , HtmlEvents.onClick Reload
-                                    ]
-                                    [ Html.text "Reload" ]
-                                , Html.button
-                                    [ HtmlAttributes.class "button"
-                                    , HtmlEvents.onClick CloseDialog
-                                    ]
-                                    [ Html.text "Close" ]
-                                ]
-                        )
-              }
-            , Cmd.none
-            )
+            ( { model | dialog = Just Error }, Cmd.none )
 
         OpenOkCancelDialog ->
-            ( { model
-                | dialog =
-                    Just
-                        (Dialog.config CloseDialog
-                            |> Dialog.primary
-                            |> Dialog.title "Hello"
-                            |> Dialog.body [] [ Html.text "Click ok to get a letter." ]
-                            |> Dialog.footer [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
-                                [ Html.button
-                                    [ HtmlAttributes.class "button mr-2"
-                                    , HtmlEvents.onClick Cancel
-                                    ]
-                                    [ Html.text "Cancel" ]
-                                , Html.button
-                                    [ HtmlAttributes.class "button is-primary"
-                                    , HtmlEvents.onClick Ok
-                                    ]
-                                    [ Html.text "Ok" ]
-                                ]
-                        )
-              }
-            , Cmd.none
-            )
+            ( { model | dialog = Just OkCancel }, Cmd.none )
 
         OpenLoadingDialog ->
-            ( { model | loading = True }, Cmd.none )
+            ( { model | dialog = Just Loading }, Cmd.none )
 
         CloseDialog ->
             ( { model | dialog = Nothing }, Cmd.none )
 
         Ok ->
-            ( { model | letterBox = "📬", dialog = Nothing }, Cmd.none )
+            ( { model | letterBox = '📬', dialog = Nothing }, Cmd.none )
 
         Cancel ->
-            ( { model | letterBox = "📭", dialog = Nothing }, Cmd.none )
+            ( { model | letterBox = '📭', dialog = Nothing }, Cmd.none )
+
+        SetApprove approve ->
+            ( { model | approve = approve }, Cmd.none )
 
         Reload ->
             ( model, Navigation.reload )
@@ -172,16 +120,96 @@ view model =
             [ Html.text "Open Loading Dialog" ]
         , Html.div
             [ HtmlAttributes.class "mt-4" ]
-            [ Html.text model.letterBox ]
+            [ Html.text (String.fromChar model.letterBox) ]
         , case model.dialog of
-            Just config ->
-                Dialog.view config
+            Just Info ->
+                viewInfo
+
+            Just Error ->
+                viewError
+
+            Just OkCancel ->
+                viewOkCancel model
+
+            Just Loading ->
+                Dialog.viewLoading
 
             Nothing ->
                 Html.text ""
-        , if model.loading then
-            Dialog.viewLoading
-
-          else
-            Html.text ""
         ]
+
+
+viewInfo : Html.Html Msg
+viewInfo =
+    Dialog.config CloseDialog
+        |> Dialog.info
+        |> Dialog.title "Info"
+        |> Dialog.body [] [ Html.text "Hello from elm-dialog" ]
+        |> Dialog.footer [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
+            [ Html.button
+                [ HtmlAttributes.class "button"
+                , HtmlEvents.onClick CloseDialog
+                ]
+                [ Html.text "Close" ]
+            ]
+        |> Dialog.view
+
+
+viewError : Html.Html Msg
+viewError =
+    Dialog.config CloseDialog
+        |> Dialog.danger
+        |> Dialog.title "Error"
+        |> Dialog.closeOnBackgroundClick False
+        |> Dialog.showCloseIcon False
+        |> Dialog.body [] [ Html.text "Something went wrong :(" ]
+        |> Dialog.footer [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
+            [ Html.button
+                [ HtmlAttributes.class "button is-danger mr-2"
+                , HtmlEvents.onClick Reload
+                ]
+                [ Html.text "Reload" ]
+            , Html.button
+                [ HtmlAttributes.class "button"
+                , HtmlEvents.onClick CloseDialog
+                ]
+                [ Html.text "Close" ]
+            ]
+        |> Dialog.view
+
+
+viewOkCancel : Model -> Html.Html Msg
+viewOkCancel model =
+    Dialog.config CloseDialog
+        |> Dialog.primary
+        |> Dialog.title "Hello"
+        |> Dialog.body [ HtmlAttributes.class "content" ]
+            [ Html.text "Terms and conditions"
+            , Html.ul [] [ Html.li [] [ Html.text "Click ok to get letter" ] ]
+            , Html.div []
+                [ Html.label
+                    [ HtmlAttributes.class "checkbox" ]
+                    [ Html.input
+                        [ HtmlAttributes.type_ "checkbox"
+                        , HtmlAttributes.checked model.approve
+                        , HtmlEvents.onCheck SetApprove
+                        ]
+                        []
+                    , Html.text " I agree"
+                    ]
+                ]
+            ]
+        |> Dialog.footer [ HtmlAttributes.class "is-flex is-justify-content-flex-end" ]
+            [ Html.button
+                [ HtmlAttributes.class "button mr-2"
+                , HtmlEvents.onClick Cancel
+                ]
+                [ Html.text "Cancel" ]
+            , Html.button
+                [ HtmlAttributes.class "button is-primary"
+                , HtmlAttributes.disabled (not model.approve)
+                , HtmlEvents.onClick Ok
+                ]
+                [ Html.text "Ok" ]
+            ]
+        |> Dialog.view
