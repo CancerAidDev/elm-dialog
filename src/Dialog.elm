@@ -1,7 +1,9 @@
 module Dialog exposing
-    ( Model, Dialog, error, httpError, info, loading, okCancel
-    , Customizations
-    , Msg, update
+    ( Config, config, closeOnBackgroundClick, showCloseIcon
+    , dark, primary, link, info, success, warning, danger
+    , title, body, footer
+    , small, medium, large
+    , view, viewLoading, viewCustomLoading
     )
 
 {-| Simple Dialog.
@@ -11,123 +13,355 @@ We recommend checking out the [examples] to get a feel for how it works.
 [examples]: https://github.com/canceraiddev/elm-dialog/tree/main/examples
 
 
-# Model
-
-@docs Model, Dialog, error, httpError, info, loading, okCancel
-
-
 # Configuration
 
-@docs Customizations
+@docs Config, config, closeOnBackgroundClick, showCloseIcon
 
 
-# Update
+## Colors
 
-@docs Msg, update
+@docs dark, primary, link, info, success, warning, danger
+
+
+## Content
+
+@docs title, body, footer
+
+
+## Sizes
+
+@docs small, medium, large
+
+
+# View
+
+@docs view, viewLoading, viewCustomLoading
 
 -}
 
-import Browser.Navigation as Navigation
-import Dialog.Internal as Internal
+import Accessibility.Aria as Aria
 import Html
-import Http.Detailed as HttpDetailed
+import Html.Attributes as HtmlAttributes
+import Html.Attributes.Extra as HtmlAttributesExtra
+import Html.Events as HtmlEvents
+import Html.Extra as HtmlExtra
 
 
-{-| Dialog Model data type.
+{-| Opaque type representing dialog config
 -}
-type alias Model body msg =
-    Maybe (Internal.Dialog body msg)
-
-
-{-| Dialog data type.
--}
-type alias Dialog body msg =
-    Internal.Dialog body msg
-
-
-{-| Create a httpError dialog.
--}
-httpError : { title : String, message : String } -> HttpDetailed.Error body -> Dialog body msg
-httpError { title, message } err =
-    Internal.DialogHttpError
-        { title = title
-        , message = message
-        , httpError = err
+type Config msg
+    = Config
+        { closeMsg : msg
+        , title : Maybe String
+        , body : Maybe (Body msg)
+        , footer : Maybe (Footer msg)
+        , options : Options
         }
 
 
-{-| Create an info dialog.
--}
-info : { title : String, message : String } -> Dialog body msg
-info =
-    Internal.DialogInfo
-
-
-{-| Create an error dialog.
--}
-error : { title : String, message : String } -> Dialog body msg
-error =
-    Internal.DialogError
-
-
-{-| Create a loading dialog.
--}
-loading : Dialog body msg
-loading =
-    Internal.Loading
-
-
-{-| Create an OK/Cancel dialog.
--}
-okCancel : { title : String, message : String, ok : msg, cancel : msg } -> Dialog body msg
-okCancel { title, message, ok, cancel } =
-    Internal.DialogOkCancel
-        { title = title
-        , message = message
-        , ok = ok
-        , cancel = cancel
-        }
-
-
-
--- CONFIG
-
-
-{-| Customizations for dialog.
-
-Use `viewLoadingIndicator` to set a custom loading icon, e.g. a .gif or custom HTML element.
-
-Use `viewHttpError` to render Http.Detailed.Error messages.
-
--}
-type alias Customizations body msg =
-    { viewLoadingIndicator : Html.Html msg
-    , viewHttpError : HttpDetailed.Error body -> Html.Html msg
-    , toMsg : Msg -> msg
+type alias Options =
+    { size : Maybe Size
+    , color : Maybe Color
+    , showCloseIcon : Bool
+    , closeOnBackgroundClick : Bool
     }
 
 
-
--- MSG
-
-
-{-| Opaque type representing the messages of the Dialog.
+{-| Opaque type representing a dialog body
 -}
-type alias Msg =
-    Internal.Msg
+type Body msg
+    = Body (Node msg)
 
 
-
--- UPDATE
-
-
-{-| Update dialog.
+{-| Opaque type representing a dialog footer
 -}
-update : Msg -> Model body msg -> ( Model body msg, Cmd Msg )
-update msg model =
-    case msg of
-        Internal.Close ->
-            ( Nothing, Cmd.none )
+type Footer msg
+    = Footer (Node msg)
 
-        Internal.Reload ->
-            ( model, Navigation.reload )
+
+type alias Node msg =
+    { attributes : List (Html.Attribute msg)
+    , children : List (Html.Html msg)
+    }
+
+
+type Size
+    = Small
+    | Medium
+    | Large
+
+
+type Color
+    = Dark
+    | Primary
+    | Link
+    | Info
+    | Success
+    | Warning
+    | Danger
+
+
+colorClass : Color -> Html.Attribute msg
+colorClass color =
+    HtmlAttributes.class <|
+        case color of
+            Dark ->
+                "is-dark"
+
+            Primary ->
+                "is-primary"
+
+            Link ->
+                "is-link"
+
+            Info ->
+                "is-info"
+
+            Success ->
+                "is-success"
+
+            Warning ->
+                "is-warning"
+
+            Danger ->
+                "is-danger"
+
+
+sizeClass : Size -> Html.Attribute msg
+sizeClass size =
+    HtmlAttributes.class <|
+        case size of
+            Small ->
+                "is-small"
+
+            Medium ->
+                "is-medium"
+
+            Large ->
+                "is-large"
+
+
+{-| Create an initial dialog config. You can specify the title, body, footer and other option functions.
+-}
+config : msg -> Config msg
+config closeMsg =
+    Config
+        { closeMsg = closeMsg
+        , title = Nothing
+        , body = Nothing
+        , footer = Nothing
+        , options = defaultOptions
+        }
+
+
+defaultOptions : Options
+defaultOptions =
+    { size = Nothing
+    , color = Nothing
+    , showCloseIcon = True
+    , closeOnBackgroundClick = True
+    }
+
+
+{-| -}
+closeOnBackgroundClick : Bool -> Config msg -> Config msg
+closeOnBackgroundClick hide (Config ({ options } as conf)) =
+    Config { conf | options = { options | closeOnBackgroundClick = hide } }
+
+
+{-| -}
+showCloseIcon : Bool -> Config msg -> Config msg
+showCloseIcon show (Config ({ options } as conf)) =
+    Config { conf | options = { options | showCloseIcon = show } }
+
+
+{-| Option to apply is-small to dialog
+-}
+small : Config msg -> Config msg
+small (Config ({ options } as conf)) =
+    Config { conf | options = { options | size = Just Small } }
+
+
+{-| Option to apply is-medium to dialog
+-}
+medium : Config msg -> Config msg
+medium (Config ({ options } as conf)) =
+    Config { conf | options = { options | size = Just Medium } }
+
+
+{-| Option to apply is-large to dialog
+-}
+large : Config msg -> Config msg
+large (Config ({ options } as conf)) =
+    Config { conf | options = { options | size = Just Large } }
+
+
+{-| Option to apply is-dark color to dialog
+-}
+dark : Config msg -> Config msg
+dark (Config ({ options } as conf)) =
+    Config { conf | options = { options | color = Just Dark } }
+
+
+{-| Option to apply is-primary color to dialog
+-}
+primary : Config msg -> Config msg
+primary (Config ({ options } as conf)) =
+    Config { conf | options = { options | color = Just Primary } }
+
+
+{-| Option to apply is-link color to dialog
+-}
+link : Config msg -> Config msg
+link (Config ({ options } as conf)) =
+    Config { conf | options = { options | color = Just Link } }
+
+
+{-| Option to apply is-info color to dialog
+-}
+info : Config msg -> Config msg
+info (Config ({ options } as conf)) =
+    Config { conf | options = { options | color = Just Info } }
+
+
+{-| Option to apply is-success color to dialog
+-}
+success : Config msg -> Config msg
+success (Config ({ options } as conf)) =
+    Config { conf | options = { options | color = Just Success } }
+
+
+{-| Option to apply is-warning color to dialog
+-}
+warning : Config msg -> Config msg
+warning (Config ({ options } as conf)) =
+    Config { conf | options = { options | color = Just Warning } }
+
+
+{-| Option to apply is-danger color to dialog
+-}
+danger : Config msg -> Config msg
+danger (Config ({ options } as conf)) =
+    Config { conf | options = { options | color = Just Danger } }
+
+
+{-| Option to set title string of dialog
+-}
+title : String -> Config msg -> Config msg
+title str (Config conf) =
+    Config { conf | title = Just str }
+
+
+{-| Option to set body content of dialog
+-}
+body : List (Html.Attribute msg) -> List (Html.Html msg) -> Config msg -> Config msg
+body attributes children (Config conf) =
+    Config { conf | body = Just (Body { attributes = attributes, children = children }) }
+
+
+{-| Option to set footer content of dialog
+-}
+footer : List (Html.Attribute msg) -> List (Html.Html msg) -> Config msg -> Config msg
+footer attributes children (Config conf) =
+    Config { conf | footer = Just (Footer { attributes = attributes, children = children }) }
+
+
+viewModal : { closeMsg : Maybe msg } -> List (Html.Html msg) -> Html.Html msg
+viewModal options children =
+    Html.div [ HtmlAttributes.class "modal is-active is-clipped" ]
+        [ Html.div
+            [ HtmlAttributes.class "modal-background"
+            , HtmlAttributesExtra.attributeMaybe HtmlEvents.onClick options.closeMsg
+            ]
+            []
+        , Html.div [ HtmlAttributes.class "modal-content has-text-left" ]
+            children
+        ]
+
+
+{-| View loading dialog. Styled using [bulma progress bar](https://bulma.io/documentation/elements/progress/#docsNav)
+-}
+viewLoading : Html.Html msg
+viewLoading =
+    viewCustomLoading [] [ defaultLoadingIndicator ]
+
+
+{-| View loading dialog with custom element.
+-}
+viewCustomLoading : List (Html.Attribute msg) -> List (Html.Html msg) -> Html.Html msg
+viewCustomLoading attributes children =
+    viewModal
+        { closeMsg = Nothing }
+        [ Html.div
+            (HtmlAttributes.class "is-flex is-justify-content-center" :: attributes)
+            children
+        ]
+
+
+defaultLoadingIndicator : Html.Html msg
+defaultLoadingIndicator =
+    Html.progress
+        [ HtmlAttributes.class "progress is-large is-info"
+        , HtmlAttributes.max "100"
+        ]
+        []
+
+
+viewHeader : Config msg -> Html.Html msg
+viewHeader (Config conf) =
+    Html.div [ HtmlAttributes.class "message-header" ]
+        [ Html.p [] [ Html.text (Maybe.withDefault "" conf.title) ]
+        , HtmlExtra.viewIf conf.options.showCloseIcon (closeIcon conf.closeMsg)
+        ]
+
+
+closeIcon : msg -> Html.Html msg
+closeIcon closeMsg =
+    Html.button
+        [ HtmlAttributes.class "delete"
+        , Aria.label "close"
+        , HtmlEvents.onClick closeMsg
+        ]
+        []
+
+
+{-| View dialog for specified config
+-}
+view : Config msg -> Html.Html msg
+view (Config ({ closeMsg, options } as conf)) =
+    viewModal
+        { closeMsg =
+            if options.closeOnBackgroundClick then
+                Just closeMsg
+
+            else
+                Nothing
+        }
+        [ Html.article
+            [ HtmlAttributes.class "message"
+            , HtmlAttributesExtra.attributeMaybe colorClass options.color
+            , HtmlAttributesExtra.attributeMaybe sizeClass options.size
+            ]
+            [ viewHeader (Config conf)
+            , Html.div [ HtmlAttributes.class "message-body" ] <|
+                List.filterMap identity
+                    [ viewBody conf.body
+                    , viewFooter conf.footer
+                    ]
+            ]
+        ]
+
+
+viewBody : Maybe (Body msg) -> Maybe (Html.Html msg)
+viewBody =
+    Maybe.map (\(Body { attributes, children }) -> Html.div attributes children)
+
+
+viewFooter : Maybe (Footer msg) -> Maybe (Html.Html msg)
+viewFooter =
+    Maybe.map
+        (\(Footer { attributes, children }) ->
+            Html.div
+                (HtmlAttributes.class "pt-4" :: attributes)
+                children
+        )
