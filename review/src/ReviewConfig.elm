@@ -27,4 +27,3 @@ config =
     , NoUnused.Modules.rule
     , NoUnused.Variables.rule
     ]
-

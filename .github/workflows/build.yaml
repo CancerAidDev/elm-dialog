@@ -43,5 +43,3 @@ jobs:
         run: yarn elm-format --validate src examples
 
       - run: yarn elm-review
-
-      # - run: yarn elm-test

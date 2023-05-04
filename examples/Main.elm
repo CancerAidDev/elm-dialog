@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Navigation
 import Dialog
-import Html as Html
+import Html
 import Html.Attributes as HtmlAttributes
 import Html.Events as HtmlEvents
 
